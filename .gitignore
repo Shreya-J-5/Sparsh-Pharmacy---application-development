@@ -1,0 +1,9 @@
+node_modules/
+.expo/
+dist/
+coverage/
+.env.local
+*.log
+backend/.env
+mobile/.env
+.DS_Store

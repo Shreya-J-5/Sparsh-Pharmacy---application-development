@@ -1,0 +1,25 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "mysql" url = env("DATABASE_URL") }
+enum Role { CUSTOMER OWNER PHARMACIST DELIVERY }
+enum OrderStatus { PENDING_VERIFICATION APPROVED PACKED OUT_FOR_DELIVERY DELIVERED REJECTED }
+enum OfferType { FESTIVAL COMBO PRODUCT_DISCOUNT COUPON }
+model User { id String @id @default(cuid()) phone String? @unique email String? @unique passwordHash String? role Role @default(CUSTOMER) createdAt DateTime @default(now()) addresses Address[] orders Order[] prescriptions Prescription[] @@index([role]) }
+model Address { id String @id @default(cuid()) userId String user User @relation(fields:[userId],references:[id],onDelete:Cascade) label String line1 String line2 String? city String pincode String phone String createdAt DateTime @default(now()) @@index([userId]) }
+model Category { id String @id @default(cuid()) name String @unique medicines Medicine[] }
+model Medicine { id String @id @default(cuid()) name String brand String? categoryId String category Category @relation(fields:[categoryId],references:[id]) composition String? details Json? imageUrl String? mrp Decimal @db.Decimal(10,2) sellingPrice Decimal @db.Decimal(10,2) rxRequired Boolean @default(false) lowStockThreshold Int @default(3) createdAt DateTime @default(now()) batches Batch[] costs MedicineCost? @@index([name]) }
+model MedicineCost { medicineId String @id medicine Medicine @relation(fields:[medicineId],references:[id],onDelete:Cascade) costPrice Decimal @db.Decimal(10,2) updatedAt DateTime @updatedAt }
+model Batch { id String @id @default(cuid()) medicineId String medicine Medicine @relation(fields:[medicineId],references:[id],onDelete:Cascade) batchNumber String quantity Int expiry DateTime movements StockMovement[] @@index([medicineId,expiry]) }
+model StockMovement { id String @id @default(cuid()) batchId String batch Batch @relation(fields:[batchId],references:[id]) quantity Int reason String createdAt DateTime @default(now()) }
+model Prescription { id String @id @default(cuid()) userId String user User @relation(fields:[userId],references:[id]) privateObjectKey String doctorName String expiresAt DateTime? approvedAt DateTime? createdAt DateTime @default(now()) @@index([userId,expiresAt]) }
+model Order { id String @id @default(cuid()) userId String user User @relation(fields:[userId],references:[id]) status OrderStatus @default(PENDING_VERIFICATION) total Decimal @db.Decimal(10,2) prescriptionId String? addressSnapshot Json createdAt DateTime @default(now()) items OrderItem[] history OrderStatusHistory[] @@index([userId,createdAt]) }
+model OrderItem { id String @id @default(cuid()) orderId String order Order @relation(fields:[orderId],references:[id],onDelete:Cascade) medicineId String quantity Int unitPrice Decimal @db.Decimal(10,2) costSnapshot Decimal @db.Decimal(10,2) discount Decimal @db.Decimal(10,2) }
+model OrderStatusHistory { id String @id @default(cuid()) orderId String order Order @relation(fields:[orderId],references:[id],onDelete:Cascade) status OrderStatus reason String? createdAt DateTime @default(now()) }
+model Offer { id String @id @default(cuid()) type OfferType title String config Json startsAt DateTime? endsAt DateTime? active Boolean @default(true) @@index([type,active,startsAt,endsAt]) }
+model Coupon { code String @id offerId String usageLimit Int perCustomerLimit Int expiresAt DateTime redemptions CouponRedemption[] }
+model CouponRedemption { id String @id @default(cuid()) couponCode String coupon Coupon @relation(fields:[couponCode],references:[code]) userId String orderId String createdAt DateTime @default(now()) @@index([couponCode,userId]) }
+model NotifyRequest { id String @id @default(cuid()) userId String medicineId String createdAt DateTime @default(now()) @@unique([userId,medicineId]) }
+model DeviceToken { id String @id @default(cuid()) userId String token String platform String @@unique([userId,token]) }
+model Broadcast { id String @id @default(cuid()) message String imageUrl String? active Boolean @default(true) createdAt DateTime @default(now()) }
+model Setting { key String @id value Json }
+model AppConfig { id Int @id @default(1) minSupportedVersion String latestVersion String storeUrl String? whatsNew String? }
+model AuditLog { id String @id @default(cuid()) actorId String action String entityType String entityId String? metadata Json? createdAt DateTime @default(now()) @@index([actorId,createdAt]) }

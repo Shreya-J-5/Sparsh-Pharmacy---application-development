@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Sparsh Pharmacy", "slug": "sparsh-pharmacy", "scheme": "sparshpharmacy", "version": "1.0.0", "orientation": "portrait", "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": {"image":"./assets/splash.png","resizeMode":"contain","backgroundColor":"#FFFFFF"},
+    "ios": {"supportsTablet":true,"bundleIdentifier":"com.sparshclinic.pharmacy"},
+    "android": {"package":"com.sparshclinic.pharmacy","adaptiveIcon":{"foregroundImage":"./assets/adaptive-icon.png","backgroundColor":"#FFFFFF"}},
+    "plugins": ["expo-router",["expo-image-picker",{"photosPermission":"Allow Sparsh Pharmacy to attach a prescription photo.","cameraPermission":"Allow Sparsh Pharmacy to photograph a prescription."}]],
+    "experiments":{"typedRoutes":true}, "runtimeVersion":{"policy":"appVersion"}, "updates":{"url":"https://u.expo.dev/replace-with-eas-project-id"}
+  }
+}

@@ -1,0 +1,9 @@
+export type PriceProduct={id:string;price:number;mrp:number;costPrice:number;stock:number;rxRequired?:boolean};
+export type PriceOffer={id:string;type:string;config:Record<string,any>};
+export function calculateOrder(items:{productId:string;quantity:number}[],products:PriceProduct[],offers:PriceOffer[],minMargin=15,coupon?:{type:'percent'|'flat';value:number;minSpend?:number;remaining:number}){
+ const lines=items.map(i=>{const p=products.find(x=>x.id===i.productId);if(!p)throw new Error(`Unknown product ${i.productId}`);if(i.quantity<1||i.quantity>p.stock)throw new Error(`Insufficient stock for ${p.id}`);const floor=p.costPrice*(1+minMargin/100),unit=Math.max(floor,Math.min(p.price,p.mrp));return {productId:p.id,quantity:i.quantity,unitPrice:unit,costPrice:p.costPrice,discount:Math.max(0,p.price-unit),rxRequired:!!p.rxRequired};});
+ const normal=lines.reduce((s,l)=>s+l.unitPrice*l.quantity,0);let total=normal,appliedOffer:string|undefined;
+ for(const offer of offers.filter(x=>x.type==='combo')){const {minCart,productId,flatTotal}=offer.config;const base=lines.filter(x=>x.productId!==productId).reduce((s,l)=>s+l.unitPrice*l.quantity,0);const included=lines.some(x=>x.productId===productId);if(included&&base>=minCart&&flatTotal<total){total=Math.max(flatTotal,lines.reduce((s,l)=>s+l.costPrice*(1+minMargin/100)*l.quantity,0));appliedOffer=offer.id;}}
+ if(coupon&&coupon.remaining>0&&total>=(coupon.minSpend||0)){const candidate=coupon.type==='percent'?total*(1-coupon.value/100):total-coupon.value;const floor=lines.reduce((s,l)=>s+l.costPrice*(1+minMargin/100)*l.quantity,0);if(Math.max(candidate,floor)<total){total=Math.max(candidate,floor);appliedOffer='coupon';}}
+ return {items:lines,subtotal:normal,total:Math.round(total*100)/100,discount:Math.round((normal-total)*100)/100,appliedOffer,requiresPrescription:lines.some(x=>x.rxRequired)};
+}

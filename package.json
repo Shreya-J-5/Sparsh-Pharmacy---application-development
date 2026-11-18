@@ -1,0 +1,6 @@
+{
+  "name": "sparsh-pharmacy",
+  "private": true,
+  "workspaces": ["mobile", "backend", "packages/shared"],
+  "scripts": { "api:dev": "npm --workspace backend run start:dev", "mobile": "npm --workspace mobile run start" }
+}
